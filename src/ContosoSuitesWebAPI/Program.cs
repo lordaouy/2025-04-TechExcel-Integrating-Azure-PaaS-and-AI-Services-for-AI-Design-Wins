@@ -53,6 +53,20 @@ builder.Services.AddSingleton<CosmosClient>((_) =>
     return client;
 });
 
+builder.Services.AddSingleton<Kernel>((_) =>
+{
+    IKernelBuilder kernelBuilder = Kernel.CreateBuilder();
+    kernelBuilder.AddAzureOpenAIChatCompletion(
+        deploymentName: builder.Configuration["AzureOpenAI:DeploymentName"]!,
+        endpoint: builder.Configuration["AzureOpenAI:Endpoint"]!,
+        apiKey: builder.Configuration["AzureOpenAI:ApiKey"]!
+    );
+    var databaseService = _.GetRequiredService<IDatabaseService>();
+    kernelBuilder.Plugins.AddFromObject(databaseService);
+    return kernelBuilder.Build();
+});
+
+
 // Create a single instance of the AzureOpenAIClient to be shared across the application.
 builder.Services.AddSingleton<AzureOpenAIClient>((_) =>
 {
