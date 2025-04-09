@@ -1,14 +1,16 @@
-﻿using Azure.AI.OpenAI;
+﻿// using Azure.AI.OpenAI;
 using ContosoSuitesWebAPI.Entities;
 using Microsoft.Azure.Cosmos;
 using System.Globalization;
+using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Embeddings;
 
 namespace ContosoSuitesWebAPI.Services
 {
     /// <summary>
     /// The vectorization service for generating embeddings and executing vector searches.
     /// </summary>
-    public class VectorizationService(AzureOpenAIClient openAIClient, CosmosClient cosmosClient, IConfiguration configuration) : IVectorizationService
+    public class VectorizationService(Kernel kernel, CosmosClient cosmosClient, IConfiguration configuration) : IVectorizationService
     {
         private readonly AzureOpenAIClient _client = openAIClient;
         private readonly CosmosClient _cosmosClient = cosmosClient;
@@ -20,14 +22,19 @@ namespace ContosoSuitesWebAPI.Services
         /// </summary>
         public async Task<float[]> GetEmbeddings(string text)
         {
-            var embeddingClient = _client.GetEmbeddingClient(_embeddingDeploymentName);
+            // var embeddingClient = _client.GetEmbeddingClient(_embeddingDeploymentName);
+            private readonly Kernel _kernel = kernel;
 
+            
             try
             {
                 // Generate a vector for the provided text.
-                var embeddings = await embeddingClient.GenerateEmbeddingAsync(text);
+                // var embeddings = await embeddingClient.GenerateEmbeddingAsync(text);
+                var embeddings = await _kernel.GetRequiredService<ITextEmbeddingGenerationService>().GenerateEmbeddingAsync(text);
 
-                var vector = embeddings.Value.Vector.ToArray();
+
+                var vector = embeddings.ToArray();
+                // var vector = embeddings.Value.Vector.ToArray();
 
                 // Return the vector embeddings.
                 return vector;
